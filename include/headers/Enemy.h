@@ -37,6 +37,8 @@ private:
 
     double angle; // degree
 
+    int num_bullet;
+    double angle_bullet;
 
     vector<Bullet> shot;
     vector<Bullet> shot2;

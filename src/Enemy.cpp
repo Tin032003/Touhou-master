@@ -10,6 +10,7 @@ Enemy::~Enemy(){
 
 void Enemy::InitBullet(){
 
+    num_bullet = 3;
 // Shot1
     for(int i = 0 ; i < 360 ; i += 6){
         Bullet b;
@@ -142,19 +143,22 @@ void Enemy::HandleBullet(SDL_Renderer * screen){
     */
 //Shot6
     if (5 <= EnemyTime.GetSeconds() and EnemyTime.GetSeconds() <= 15 ){ 
-        if (EnemyTime.GetSeconds()%1 == 0 and EnemyTime.CheckSeconds(60)) {
-            int n = 3;
-            if (n and EnemyTime.CheckSeconds(6) and EnemyTime.GetSeconds()%1 == 0){
-                Bullet b;
-
-                b.SetPos(x, y);
-                b.SetAngle(90);
-                b.SetSpeed(2,2);
-                b.SetType(b.VECTOR);
-                shot6.push_back(b);
-                n--;
-            }
+        if (EnemyTime.GetSeconds()%3 == 0 and EnemyTime.CheckSeconds(60)) {
+            angle_bullet = rand() % (180 - 0 + 1) + 0;
+            num_bullet = 3;
         }
+	 	if (EnemyTime.CheckSeconds(20) and num_bullet){
+	 		Bullet b;
+
+            b.SetPos(x, y);
+            b.SetAngle(angle_bullet);
+            b.SetSpeed(2,2);
+            b.SetType(b.VECTOR);
+            shot6.push_back(b);
+
+            num_bullet--;
+	 	}
+
     }
     for(auto &x : shot6){
         x.HandleMove();           
