@@ -6,6 +6,7 @@
 #include "Character.h"
 #include "Bullet.h"
 #include "ImpTimer.h"
+#include "Enemy.h"
 
 class Game{
 
@@ -19,6 +20,7 @@ private:
 
     GameTime MainTime;
     Character Hakurei;  
+    Enemy Test;
 public:
 
     Game(){ 
