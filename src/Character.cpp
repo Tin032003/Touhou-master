@@ -75,10 +75,29 @@ void Character::Load(SDL_Renderer * screen, string character_name) {
 	}
 }
 }
+
+bool Character::BorderCollision(){
+	SDL_Rect rect = player[current_status].GetRect();
+
+	SDL_Rect border;
+	border.x = x;
+	border.y = y;
+	border.w = rect.w / number_frames;
+	border.h = rect.h;
+
+	if(border.x < BOARD_X or border.x + border.w >= BOARD_LIMITED_X or border.y < BOARD_Y or border.y + border.h > BOARD_LIMITED_Y)
+		return true;
+	return false;
+}
 void Character::Update() {
 	if(is_move) {
 		x += move_x * move_speed;
 		y += move_y * move_speed;
+
+		if(BorderCollision()){
+			x -= move_x * move_speed;
+			y -= move_y * move_speed;
+		}
 
 		yin_x = x - 20;
 		yin_y = y + 10;
@@ -101,24 +120,10 @@ void Character::Update() {
 
 	/* Yinyang */
 	yinyang_angle += yinyang_speed;
-
-	/* Bullet */
-	if(is_shoot) AddBullet();
-
-	for(auto &[pos , id] : weapon) {
-		if(id == 0 or id == 1) pos.se -= 10;
-		if(id == 2){
-			pos.fi += 6 * cos(120*PI/180);
-        	pos.se -= 6 * sin(60*PI/180);
-		}
-		if(id == 3){
-			pos.fi += 6 * cos(60*PI/180);
-        	pos.se -= 6 * sin(60*PI/180);
-		}
-	}
 	
 }
 void Character::Show(SDL_Renderer * screen) {
+	Update();
 
 	/*#########################        Bullet Character            ################################################*/
 	for(auto [pos, id] : weapon){
@@ -135,6 +140,15 @@ void Character::Show(SDL_Renderer * screen) {
 
 	SDL_Rect renderquad = { int(x) , int(y) , rect.w / number_frames, rect.h };
 	SDL_RenderCopy(screen, p_object, &frame_clip[current_status][current_frame], &renderquad);
+
+	SDL_Rect border;
+	border.x = x;
+	border.y = y;
+	border.w = rect.w / number_frames;
+	border.h = rect.h;
+
+//	SDL_SetRenderDrawColor(screen , 255, 0 , 0 , 0);
+	SDL_RenderDrawRect(screen , &border);
 	}
 	/*########################      Yinyang arround character            ####################################### */
 	{
@@ -158,8 +172,8 @@ void Character::AddBullet(){
 		weapon.push_back({{x, y + 5}, 1});
 		weapon.push_back({{x + 30, y + 5}, 1});
 
-		weapon.push_back({{yin_x - 5 , yin_y}, 2});
-		weapon.push_back({{yin_x + second_yin_x - 10, yin_y}, 3});
+		weapon.push_back({{yin_x - 15 , yin_y}, 2});
+		weapon.push_back({{yin_x + second_yin_x - 20, yin_y}, 3});
 	}
 	else{
 
@@ -179,8 +193,58 @@ void Character::AddBullet(){
 		}
 		y_ = weapon[it].fi.se;
 		if(yin_y - y_ > 200){
-			weapon.push_back({{yin_x - 5 , yin_y}, 2});
-			weapon.push_back({{yin_x + second_yin_x - 10, yin_y}, 3});
+			weapon.push_back({{yin_x - 15 , yin_y}, 2});
+			weapon.push_back({{yin_x + second_yin_x - 20, yin_y}, 3});
+		}
+	}
+}
+
+void Character::HandleBullet(vector<Enemy>& enemy){
+	/* Bullet */
+	if(is_shoot) AddBullet();
+
+
+	for(auto &[pos , id] : weapon) {
+		if(id == 0 or id == 1) pos.se -= 10;
+		if(id == 2 or id == 3){
+			if(enemy.empty()){
+				if(id == 2){
+					pos.fi += 6 * cos(99.0*PI/180);
+					pos.se -= 6 * sin(80*PI/180);
+				}
+				if(id == 3){
+					pos.fi += 6 * cos(80*PI/180);
+        			pos.se -= 6 * sin(80*PI/180);
+				}
+			}else{
+				double x = pos.fi + char_bullet[2].GetRect().w / 2;
+				double y = pos.se + char_bullet[2].GetRect().h / 2;
+
+				double min_dis = 9999999.0;
+				int min_id = 0;
+
+				for(int i = 0 ; i < enemy.size() ; i++){
+					double x_ = enemy[i].GetCenterPos().fi;
+					double y_ = enemy[i].GetCenterPos().se;
+
+					if(min_dis > distance({x, y}, {x_, y_})){
+						min_dis = distance({x, y}, {x_, y_});
+						min_id = i;
+					}
+				}
+
+			//	int min_id = rand()%(enemy.size() - 0 + 1) + 0;
+
+				double x_ = enemy[min_id].GetCenterPos().fi;
+				double y_ = enemy[min_id].GetCenterPos().se;
+
+				double angle = 180.0 + acos(cos({x - x_, y - y_}, {1, 0})) / PI * 180;
+
+
+				pos.fi += 6 * cos(angle / 180.0 * PI);
+				pos.se += 6 * sin(angle / 180.0 * PI);
+
+			}
 		}
 	}
 }

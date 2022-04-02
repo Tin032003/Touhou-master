@@ -15,13 +15,30 @@ private:
     SDL_Renderer* screen = NULL;
     SDL_Event* event = NULL;
 
-
     multiset<int> Key;
 
+
     GameTime MainTime;
-    Character Hakurei;  
-    Enemy Test;
+    Object GameBg;
+    Object GameBg2;
+    SDL_Rect MainBoard = {BOARD_X, BOARD_Y, BOARD_LIMITED_X - BOARD_X , BOARD_LIMITED_Y - BOARD_Y };
+
+    Character Hakurei;
+
+    /* Enemy */
+    vector<Enemy> enemy;
+ //   vector<vector<Object> > enemy_img(20);
+    Object enemy_img[20][10];
+    int wave_enemy = 0;
+
+
+    /* Bullet */
+    vector<Bullet> shot;
+    Object shot_img[20];
+     
 public:
+
+    
 
     Game(){ 
         init();
@@ -97,6 +114,7 @@ public:
             SDL_SetRenderDrawColor(screen, 0, 0, 0, 0);
             SDL_Rect r = {0, 0 , 1280 , 720};
             SDL_RenderFillRect( screen, &r );
+            SDL_SetRenderDrawBlendMode(screen, SDL_BLENDMODE_BLEND);
 
             MainTime.Update();
 
@@ -118,7 +136,13 @@ public:
         close();
     }
     void display();
+
+    void HandleEnemy();
+    void MakeEnemy();
+
+    void HandleBullet();
     void HandleInput(SDL_Event e);
+
 };
 
 #endif // GAME_H_

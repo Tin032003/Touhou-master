@@ -1,6 +1,24 @@
 #include "Enemy.h"
 
 Enemy::Enemy(){
+    current_status = ENEMY_IDLE;
+
+    time_count = 0;
+    current_frame = 0;
+    number_frames = 0;
+    time_per_frame = 0;
+    current_direct = ENEMY_RIGHT;
+
+    time_attack = -1;
+    number_frame_attack = 0;
+
+    name = 0;
+    x_speed = 0;
+    y_speed = 0;
+    a = 0;
+
+    is_move = true;
+
     EnemyTime.Start();
 }
 
@@ -8,161 +26,79 @@ Enemy::~Enemy(){
     
 }
 
-void Enemy::InitBullet(){
+void Enemy::HandleMove(){
 
-    num_bullet = 3;
-// Shot1
-    for(int i = 0 ; i < 360 ; i += 6){
-        Bullet b;
+    for(auto &x : orbit){
+        int current_time = EnemyTime.GetSeconds();
+        if(x.st == current_time and EnemyTime.GetFrameTime() == x.step){
+            x_speed = x.x_speed;
+            y_speed = x.y_speed;
 
-        b.SetPos(x, y);
-        b.SetAngle(i);
-        b.SetSpeed(1,1);
-        b.SetType(b.VECTOR);
-
-        shot.push_back(b);
-        
+            angle = x.angle;
+            a = x.a;
+        }
     }
+    x_speed += a;
+    y_speed += a;
 
-// 
+    x_speed = max(x_speed, 0.0);
+    y_speed = max(y_speed, 0.0);
+
+    x += x_speed * cos(angle*PI/180);
+    y += y_speed * sin(angle*PI/180);
 }
 
-void Enemy::HandleBullet(SDL_Renderer * screen){
-    EnemyTime.Update();
+void Enemy::InitBullet(int start_time, int end_time, int type){
+    plan.push_back({start_time, end_time, type});
+}
 
-    Object draw;
-    draw.LoadImage(screen, "res/img/enemy/b_00.png");
-    for(auto &x : shot){
-        x.HandleMove();
-        draw.SetRect(x.GetPos().fi, x.GetPos().se);
-        draw.Render(screen);
-    }
-
-// Shot2
-/*
-    if (10 <= EnemyTime.GetSeconds() and EnemyTime.GetSeconds() <= 20 ){
-        if (EnemyTime.GetSeconds()%1 == 0 and EnemyTime.CheckSeconds(60)) {
-            Bullet b;
-
-            b.SetPos(x, y);
-            b.SetAngle(18 * (EnemyTime.GetSeconds() - 10));
-            b.SetSpeed(1,1);
-            b.SetType(b.VECTOR);
-            shot2.push_back(b);
+void Enemy::HandleBullet(vector<Bullet> & shot){
+    for(auto x : plan){
+        if(x.start_time <= EnemyTime.GetSeconds() and EnemyTime.GetSeconds() <= x.end_time){
+            MakeBullet(shot, x.type, x.start_time, x.end_time);
         }
-    }     
-    for(auto &x : shot2){
-        x.HandleMove();
-        draw.SetRect(x.GetPos().fi, x.GetPos().se);
-        draw.Render(screen);
     }
-    */
+}
 
-// Shot3
-/*
-    if (10 <= EnemyTime.GetSeconds() and EnemyTime.GetSeconds() <= 20){
-        if (EnemyTime.GetSeconds()%1 == 0 and EnemyTime.CheckSeconds(60)){
-            for (int i = 80; i <= 100; i += 10) {
+void Enemy::MakeBullet(vector<Bullet> & shot, int type, int st_time, int en_time){
+    if(type == 0){
+
+        // * Cứ 0.5 s 1 vòng tròn đạn bắn ra *//
+        if (EnemyTime.CheckSeconds(30)) {
+            int tmp = rand()%( 4 - 0 + 1) + 0;
+            for(int i = tmp ; i < 360 + tmp ; i += 5){
                 Bullet b;
 
-                b.SetPos(x, y);
+                b.SetPos(center_x, center_y);
+                b.SetName(0);
                 b.SetAngle(i);
-                b.SetSpeed(1,1);
+                b.SetSpeed(1.5,1.5);
                 b.SetType(b.VECTOR);
-                shot3.push_back(b);
+
+                shot.push_back(b);
             }
+
+           ResetAttack();
         }
     }
 
-    for(auto &x : shot3){
-        x.HandleMove();
-        draw.SetRect(x.GetPos().fi, x.GetPos().se);
-        draw.Render(screen);
-    } */
-//Shot 4
-/*
-    if (5 <= EnemyTime.GetSeconds() and EnemyTime.GetSeconds() <= 15 ){
-        if (EnemyTime.GetSeconds()%1 == 0 and EnemyTime.CheckSeconds(60)) {
+    if(type == 1){
+        // Cứ 0.5 s bắn 1 viên đạn, các viên đạn từ góc 0 tới 180
+
+        if (EnemyTime.CheckSeconds(30)) {
             Bullet b;
-
-            b.SetPos(x, y);
-            b.SetAngle(18 * (EnemyTime.GetSeconds() - 5));
-            b.SetSpeed(1,1);
-            b.SetType(b.VECTOR);
-            shot4.push_back(b);
-
-            double base = 15;
-
-            double angle_radian = 18.0 * (EnemyTime.GetSeconds() - 5)/180.0 * PI;
-            
-
-            b.SetPos(x + sin(angle_radian) * base, y - cos(angle_radian) * base);
-            b.SetAngle(18 * (EnemyTime.GetSeconds() - 5));
-            b.SetSpeed(1,1);
-            b.SetType(b.VECTOR);
-            shot4.push_back(b);
-        }
-    }     
-    for(auto &x : shot4){
-        x.HandleMove();
-        draw.SetRect(x.GetPos().fi, x.GetPos().se);
-        draw.Render(screen);
-    }
-*/
-
-//Shot5
-/*
-    if (5 == EnemyTime.GetSeconds() and EnemyTime.CheckSeconds(60)) { 
-        for(int i = 0 ; i < 360 ; i += 6){
-            Bullet b;
-
-            b.SetPos(x, y);
-            b.SetAngle(i);
-            b.SetSpeed(1,1);
-            b.SetType(b.VECTOR);
-
-            shot.push_back(b);
-            
-            double base = 15;
-
-            double angle_radian =i/180.0 * PI;
-                
-
-            b.SetPos(x + sin(angle_radian) * base, y - cos(angle_radian) * base);
-            b.SetAngle(i);
-            b.SetSpeed(1,1);
-            b.SetType(b.VECTOR);
-            shot5.push_back(b);
-        }
-    }
-    for(auto &x : shot5){
-        x.HandleMove();
-        draw.SetRect(x.GetPos().fi, x.GetPos().se);
-        draw.Render(screen);
-    }
-    */
-//Shot6
-    if (5 <= EnemyTime.GetSeconds() and EnemyTime.GetSeconds() <= 15 ){ 
-        if (EnemyTime.GetSeconds()%3 == 0 and EnemyTime.CheckSeconds(60)) {
-            angle_bullet = rand() % (180 - 0 + 1) + 0;
-            num_bullet = 3;
-        }
-	 	if (EnemyTime.CheckSeconds(20) and num_bullet){
-	 		Bullet b;
-
-            b.SetPos(x, y);
-            b.SetAngle(angle_bullet);
+            b.SetPos(center_x, center_y);
+            b.SetName(1);
+            b.SetAngle(18 * (EnemyTime.GetSeconds() - st_time));
             b.SetSpeed(2,2);
             b.SetType(b.VECTOR);
-            shot6.push_back(b);
+            shot.push_back(b);
 
-            num_bullet--;
-	 	}
-
+            ResetAttack();
+        }     
     }
-    for(auto &x : shot6){
-        x.HandleMove();           
-        draw.SetRect(x.GetPos().fi, x.GetPos().se);
-        draw.Render(screen);
+    if(type == 2){
+
+
     }
 }
